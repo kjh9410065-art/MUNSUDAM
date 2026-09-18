@@ -377,8 +377,12 @@ function printDoc(id) {
   * { box-sizing: border-box; }
 
   body {
+    /* A4 안쪽에 실제 문서 용지처럼 외곽 테두리를 표시합니다. */
     margin: 0 auto;
     max-width: 178mm;
+    min-height: 263mm;
+    padding: 14mm 13mm;
+    border: 1.2px solid #222;
     color: #111;
     background: #fff;
     font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
@@ -527,7 +531,12 @@ function printDoc(id) {
   .info, .receipt, .section { break-inside: avoid; }
 
   @media print {
-    body { max-width: none; }
+    /* 인쇄할 때도 외곽 테두리가 그대로 나오도록 유지합니다. */
+    body {
+      max-width: none;
+      min-height: 263mm;
+      border: 1.2px solid #222;
+    }
   }
 </style>
 </head>
