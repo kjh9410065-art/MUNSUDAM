@@ -112,64 +112,258 @@ function escapeHtml(value) {
   }[char]));
 }
 
-// 작성된 문서를 A4 문서 형태로 만들어 인쇄합니다.
-// 입력값을 단순한 목록이 아니라 실제 출력용 서식처럼 보이도록 구성합니다.
+// 문서별로 실제 사용하는 서식에 가깝게 출력 HTML을 만듭니다.
+// 모든 문서를 똑같은 표로 출력하지 않고 문서 종류에 따라 구조를 다르게 구성합니다.
+function buildPrintTemplate(doc, values) {
+  // 날짜를 한국식 표기로 변환합니다.
+  const date = value => {
+    if (!value) return "";
+    const parts = value.split("-");
+    return parts.length === 3 ? `${parts[0]}년 ${Number(parts[1])}월 ${Number(parts[2])}일` : value;
+  };
+
+  // 사용자 입력값의 HTML 특수문자와 줄바꿈을 안전하게 처리합니다.
+  const val = key => escapeHtml(values[key] || "").replace(/\\n/g, "<br>");
+  const today = new Date();
+  const todayText = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
+
+  // 공통 입력 표를 만듭니다.
+  const infoRow = (label, value) => `
+    <div class="info-row"><div class="label">${label}</div><div class="value">${value || "&nbsp;"}</div></div>
+  `;
+
+  // 긴 내용을 작성하는 본문 영역을 만듭니다.
+  const contentBox = (title, value, height="55mm") => `
+    <div class="section">
+      <div class="section-title">${title}</div>
+      <div class="section-body" style="min-height:${height}">${value || "&nbsp;"}</div>
+    </div>
+  `;
+
+  // 사직서는 회사 제출용 문장과 서명 영역 중심으로 구성합니다.
+  if (doc.id === "resignation") {
+    return `
+      <h1>사 직 서</h1>
+      <div class="info">
+        ${infoRow("성 명", val("name"))}
+        ${infoRow("소속 / 부서", val("department"))}
+        ${infoRow("직 급", val("position"))}
+      </div>
+      <div class="resignation-text">
+        본인은 일신상의 사유로 인하여<br>
+        <strong>${date(values.date) || "____년 __월 __일"}</strong>부로 사직하고자 하오니<br>
+        허락하여 주시기 바랍니다.
+      </div>
+      ${contentBox("사직 사유", val("reason"), "35mm")}
+      <div class="date-line">${todayText}</div>
+      <div class="signature-line">성 명 : ${val("name") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+      <div class="recipient">○ ○ 회 사 귀 중</div>
+    `;
+  }
+
+  // 위임장은 위임인·수임인과 위임 범위를 명확히 적는 구조입니다.
+  if (doc.id === "power") {
+    return `
+      <h1>위 임 장</h1>
+      <div class="info">
+        ${infoRow("위 임 인", val("grantor"))}
+        ${infoRow("수 임 인", val("grantee"))}
+        ${infoRow("연 락 처", val("phone"))}
+      </div>
+      ${contentBox("위임 내용", val("purpose"), "70mm")}
+      <p class="formal-text">위 사람에게 아래의 사항을 위임합니다.</p>
+      <div class="date-line">${date(values.date) || todayText}</div>
+      <div class="signature-line">위임인 : ${val("grantor") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 차용증은 당사자와 금액·변제일·조건을 한눈에 확인할 수 있게 구성합니다.
+  if (doc.id === "loan") {
+    return `
+      <h1>차 용 증</h1>
+      <div class="loan-intro">
+        채권자와 채무자는 아래와 같이 금전을 차용하였음을 확인합니다.
+      </div>
+      <div class="info">
+        ${infoRow("채 권 자", val("lender"))}
+        ${infoRow("채 무 자", val("borrower"))}
+        ${infoRow("차용 금액", values.amount ? Number(values.amount).toLocaleString("ko-KR") + "원" : "")}
+        ${infoRow("변제 예정일", date(values.due))}
+        ${infoRow("이자 조건", val("interest"))}
+      </div>
+      <div class="terms">
+        1. 채무자는 위 차용금을 약정한 변제일까지 변제합니다.<br>
+        2. 기타 사항은 당사자 간 합의한 조건에 따릅니다.
+      </div>
+      <div class="date-line">${date(values.date) || todayText}</div>
+      <div class="two-sign">
+        <div>채권자 : ${val("lender") || "________________"} (서명 또는 인)</div>
+        <div>채무자 : ${val("borrower") || "________________"} (서명 또는 인)</div>
+      </div>
+    `;
+  }
+
+  // 각서는 제목과 본문, 작성자 서명을 중심으로 구성합니다.
+  if (doc.id === "agreement") {
+    return `
+      <h1>각 서</h1>
+      <div class="info">
+        ${infoRow("작 성 자", val("writer"))}
+        ${infoRow("제 목", val("title"))}
+      </div>
+      ${contentBox("각서 내용", val("content"), "85mm")}
+      <div class="confirmation">위 내용에 동의하며 성실히 이행할 것을 확인합니다.</div>
+      <div class="date-line">${date(values.date) || todayText}</div>
+      <div class="signature-line">작성자 : ${val("writer") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 동의서는 동의 대상과 내용을 분리하여 서명하기 쉽게 구성합니다.
+  if (doc.id === "consent") {
+    return `
+      <h1>동 의 서</h1>
+      <div class="info">
+        ${infoRow("성 명", val("name"))}
+        ${infoRow("동의 사항", val("subject"))}
+      </div>
+      ${contentBox("동의 내용", val("content"), "75mm")}
+      <div class="confirmation">본인은 위 내용을 확인하고 이에 동의합니다.</div>
+      <div class="date-line">${date(values.date) || todayText}</div>
+      <div class="signature-line">성 명 : ${val("name") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 경위서는 사건 정보와 상세 경위가 분리되도록 구성합니다.
+  if (doc.id === "report") {
+    return `
+      <h1>경 위 서</h1>
+      <div class="info">
+        ${infoRow("작성자", val("name"))}
+        ${infoRow("소속 / 부서", val("department"))}
+        ${infoRow("사건명", val("title"))}
+      </div>
+      ${contentBox("1. 사건 발생 경위", val("content"), "100mm")}
+      <div class="confirmation">위 내용은 사실과 다름없음을 확인합니다.</div>
+      <div class="date-line">${date(values.date) || todayText}</div>
+      <div class="signature-line">작성자 : ${val("name") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 사유서는 사유를 충분히 작성할 수 있는 본문 중심으로 구성합니다.
+  if (doc.id === "reason") {
+    return `
+      <h1>사 유 서</h1>
+      <div class="info">
+        ${infoRow("성 명", val("name"))}
+        ${infoRow("소속 / 부서", val("department"))}
+      </div>
+      ${contentBox("사유", val("reason"), "95mm")}
+      <div class="date-line">${date(values.date) || todayText}</div>
+      <div class="signature-line">작성자 : ${val("name") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 회의록은 회의 기본정보와 안건·결정사항을 구분합니다.
+  if (doc.id === "meeting") {
+    return `
+      <h1>회 의 록</h1>
+      <div class="info">
+        ${infoRow("회의명", val("title"))}
+        ${infoRow("회의일", date(values.date))}
+        ${infoRow("참석자", val("attendees"))}
+      </div>
+      ${contentBox("회의 안건", val("agenda"), "55mm")}
+      ${contentBox("결정 사항", val("result"), "65mm")}
+    `;
+  }
+
+  // 업무일지는 작성자와 업무·결과·예정 업무를 구분합니다.
+  if (doc.id === "worklog") {
+    return `
+      <h1>업 무 일 지</h1>
+      <div class="info">
+        ${infoRow("작성자", val("name"))}
+        ${infoRow("작성일", date(values.date))}
+      </div>
+      ${contentBox("오늘의 업무", val("today"), "55mm")}
+      ${contentBox("업무 결과", val("result"), "55mm")}
+      ${contentBox("내일의 업무", val("tomorrow"), "45mm")}
+    `;
+  }
+
+  // 지출결의서는 금액과 지출 목적을 중심으로 결재 문서 형태로 구성합니다.
+  if (doc.id === "expense") {
+    return `
+      <h1>지 출 결 의 서</h1>
+      <div class="approval">결 재 &nbsp; □ 담당 &nbsp;&nbsp; □ 팀장 &nbsp;&nbsp; □ 부서장</div>
+      <div class="info">
+        ${infoRow("작성자", val("name"))}
+        ${infoRow("부서", val("department"))}
+        ${infoRow("지출 금액", values.amount ? Number(values.amount).toLocaleString("ko-KR") + "원" : "")}
+        ${infoRow("작성일", date(values.date))}
+      </div>
+      ${contentBox("지출 목적", val("purpose"), "70mm")}
+      <div class="signature-line">작성자 : ${val("name") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 출장보고서는 출장 정보와 목적·결과를 구분합니다.
+  if (doc.id === "travel") {
+    return `
+      <h1>출 장 보 고 서</h1>
+      <div class="info">
+        ${infoRow("작성자", val("name"))}
+        ${infoRow("출장지", val("destination"))}
+        ${infoRow("출장일", date(values.date))}
+      </div>
+      ${contentBox("출장 목적", val("purpose"), "55mm")}
+      ${contentBox("출장 결과", val("result"), "75mm")}
+      <div class="signature-line">작성자 : ${val("name") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 영수증은 거래 당사자와 금액을 크게 보여주는 간단한 서식으로 구성합니다.
+  if (doc.id === "receipt") {
+    return `
+      <h1>영 수 증</h1>
+      <div class="receipt">
+        <div class="receipt-row"><span>받는 사람</span><strong>${val("recipient") || "________________"}</strong></div>
+        <div class="receipt-amount">${values.amount ? Number(values.amount).toLocaleString("ko-KR") + " 원" : "____________ 원"}</div>
+        <div class="receipt-row"><span>지급자</span><strong>${val("payer") || "________________"}</strong></div>
+        <div class="receipt-row"><span>내용</span><strong>${val("content") || "________________"}</strong></div>
+      </div>
+      <div class="date-line">${date(values.date) || todayText}</div>
+      <div class="signature-line">받는 사람 : ${val("recipient") || "________________"} &nbsp;&nbsp; (서명 또는 인)</div>
+    `;
+  }
+
+  // 예외적으로 새 문서가 추가되더라도 기본 출력 구조가 작동하도록 합니다.
+  return `
+    <h1>${escapeHtml(doc.name)}</h1>
+    <div class="info">${doc.fields.map(field => infoRow(field[1], field[2] === "date" ? date(values[field[0]]) : val(field[0]))).join("")}</div>
+  `;
+}
+
+// 작성한 문서를 A4 인쇄 전용 창으로 만들어 브라우저 인쇄 기능을 실행합니다.
 function printDoc(id) {
   const doc = docs.find(item => item.id === id);
   if (!doc) return;
 
+  // 현재 입력창의 값을 문서 필드별로 수집합니다.
   const values = {};
   doc.fields.forEach(field => {
     const element = document.getElementById(`field-${field[0]}`);
     values[field[0]] = element ? element.value : "";
   });
 
-  // 날짜 입력값을 한국식 날짜로 보기 좋게 변환합니다.
-  function formatDate(value) {
-    if (!value) return "";
-    const parts = value.split("-");
-    return parts.length === 3 ? `${parts[0]}. ${parts[1]}. ${parts[2]}.` : value;
-  }
+  // 문서별 실제 양식을 생성합니다.
+  const template = buildPrintTemplate(doc, values);
 
-  // 줄바꿈과 HTML 특수문자를 안전하게 처리합니다.
-  function safeValue(value) {
-    return escapeHtml(value || "").replace(/\\n/g, "<br>");
-  }
-
-  // textarea는 넓은 본문 영역으로, 일반 입력값은 표 형태로 출력합니다.
-  const rows = doc.fields.map(field => {
-    const value = field[2] === "date" ? formatDate(values[field[0]]) : values[field[0]];
-    const isLong = field[2] === "textarea";
-
-    if (isLong) {
-      return `
-        <section class="content-section">
-          <h3>${escapeHtml(field[1])}</h3>
-          <div class="content-box">${safeValue(value) || "&nbsp;"}</div>
-        </section>
-      `;
-    }
-
-    return `
-      <div class="info-row">
-        <div class="label">${escapeHtml(field[1])}</div>
-        <div class="value">${safeValue(value) || "&nbsp;"}</div>
-      </div>
-    `;
-  }).join("");
-
-  // 출력 창을 열어 브라우저의 기본 인쇄 기능을 사용합니다.
   const win = window.open("", "_blank");
   if (!win) {
     alert("팝업이 차단되었습니다. 팝업을 허용한 뒤 다시 시도해 주세요.");
     return;
   }
-
-  const today = new Date().toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).replace(/\\s/g, "");
 
   win.document.write(`<!doctype html>
 <html lang="ko">
@@ -177,148 +371,178 @@ function printDoc(id) {
 <meta charset="UTF-8">
 <title>${escapeHtml(doc.name)} - 문서담</title>
 <style>
-  /* A4 용지 기준으로 출력 페이지를 구성합니다. */
-  @page {
-    size: A4;
-    margin: 18mm 17mm 18mm;
-  }
+  /* A4 출력에 맞춘 기본 용지와 글꼴입니다. */
+  @page { size: A4; margin: 17mm 16mm; }
 
-  /* 화면과 인쇄 모두 읽기 좋은 기본 글꼴을 사용합니다. */
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   body {
     margin: 0 auto;
-    max-width: 176mm;
+    max-width: 178mm;
     color: #111;
+    background: #fff;
     font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
     font-size: 13px;
     line-height: 1.7;
   }
 
-  /* 문서 제목을 공식 문서처럼 크게 표시합니다. */
+  /* 모든 문서의 제목은 독립적인 공식 문서 제목처럼 배치합니다. */
   h1 {
-    margin: 8mm 0 12mm;
+    margin: 7mm 0 13mm;
     text-align: center;
     font-size: 25px;
-    letter-spacing: .12em;
+    letter-spacing: .16em;
   }
 
-  /* 기본 정보 영역을 표 형태로 정리합니다. */
+  /* 기본 정보 표입니다. */
   .info {
-    border-top: 2px solid #111;
-    border-bottom: 1px solid #111;
-    margin-bottom: 10mm;
+    border-top: 2px solid #222;
+    border-bottom: 1px solid #222;
+    margin-bottom: 9mm;
   }
 
   .info-row {
     display: grid;
-    grid-template-columns: 38mm 1fr;
+    grid-template-columns: 39mm 1fr;
     min-height: 12mm;
-    border-bottom: 1px solid #d5d5d5;
+    border-bottom: 1px solid #d3d3d3;
   }
 
-  .info-row:last-child {
-    border-bottom: 0;
-  }
+  .info-row:last-child { border-bottom: 0; }
 
   .label {
     display: flex;
     align-items: center;
     padding: 3mm 4mm;
     font-weight: 700;
-    background: #f7f7f7;
-    border-right: 1px solid #d5d5d5;
+    background: #f6f6f6;
+    border-right: 1px solid #d3d3d3;
   }
 
   .value {
     display: flex;
     align-items: center;
     padding: 3mm 4mm;
-    white-space: normal;
     overflow-wrap: anywhere;
   }
 
-  /* 경위 내용처럼 긴 문장을 문서 본문 영역으로 출력합니다. */
-  .content-section {
-    margin: 0 0 8mm;
+  /* 긴 내용 입력 영역입니다. */
+  .section {
+    margin-bottom: 8mm;
     break-inside: avoid;
   }
 
-  .content-section h3 {
-    margin: 0;
+  .section-title {
     padding: 3mm 4mm;
-    border: 1px solid #bbb;
+    border: 1px solid #aaa;
     border-bottom: 0;
-    font-size: 13px;
-    background: #f7f7f7;
+    font-weight: 700;
+    background: #f6f6f6;
   }
 
-  .content-box {
-    min-height: 48mm;
+  .section-body {
     padding: 5mm;
-    border: 1px solid #bbb;
-    white-space: normal;
+    border: 1px solid #aaa;
     overflow-wrap: anywhere;
   }
 
-  /* 문서 하단 날짜와 확인 문구를 정리합니다. */
-  .confirmation {
-    margin-top: 13mm;
+  /* 사직서와 확인 문구의 본문을 위한 스타일입니다. */
+  .resignation-text,
+  .formal-text,
+  .loan-intro {
+    margin: 15mm 4mm;
     text-align: center;
+    font-size: 15px;
+    line-height: 2.2;
   }
 
-  .print-date {
+  .confirmation {
+    margin: 13mm 0 9mm;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .date-line {
+    margin-top: 12mm;
+    text-align: right;
+  }
+
+  .signature-line {
+    margin-top: 6mm;
+    text-align: right;
+  }
+
+  .recipient {
+    margin-top: 14mm;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .terms {
+    margin: 8mm 4mm;
+    line-height: 2.1;
+  }
+
+  .two-sign {
     margin-top: 10mm;
+    display: grid;
+    gap: 6mm;
     text-align: right;
   }
 
-  .signature {
-    margin-top: 5mm;
+  /* 지출결의서 결재란입니다. */
+  .approval {
+    border: 1px solid #222;
+    padding: 4mm;
+    margin-bottom: 7mm;
     text-align: right;
+    font-weight: 700;
   }
 
-  /* 인쇄할 때 불필요한 여백과 배경을 제거합니다. */
+  /* 영수증 전용 레이아웃입니다. */
+  .receipt {
+    border: 2px solid #222;
+    padding: 12mm;
+    margin-top: 10mm;
+  }
+
+  .receipt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10mm;
+    padding: 5mm 0;
+    border-bottom: 1px solid #bbb;
+  }
+
+  .receipt-amount {
+    padding: 12mm 0;
+    text-align: center;
+    font-size: 25px;
+    font-weight: 800;
+    border-bottom: 1px solid #222;
+  }
+
+  /* 페이지가 넘어갈 때 하나의 영역이 잘리지 않게 합니다. */
+  .info, .receipt, .section { break-inside: avoid; }
+
   @media print {
-    body {
-      max-width: none;
-    }
-
-    .content-section,
-    .info-row {
-      break-inside: avoid;
-    }
+    body { max-width: none; }
   }
 </style>
 </head>
 <body>
-  <h1>${escapeHtml(doc.name)}</h1>
-
-  <div class="info">
-    ${rows}
-  </div>
-
-  <div class="confirmation">
-    위 내용은 사실과 다름없음을 확인합니다.
-  </div>
-
-  <div class="print-date">${today}</div>
-  <div class="signature">작성자: ____________________ (서명)</div>
-
-  <script>
-    // 출력 창이 열리면 자동으로 브라우저 인쇄 화면을 실행합니다.
-    window.onload = function() {
-      window.print();
-    };
-  <\\/script>
+${template}
+<script>
+  // 인쇄 전용 창이 열리면 자동으로 브라우저 인쇄 대화상자를 실행합니다.
+  window.onload = function() { window.print(); };
+<\\/script>
 </body>
 </html>`);
 
-  // 작성한 HTML을 출력 창에 반영합니다.
+  // 인쇄 창에 작성된 HTML을 적용합니다.
   win.document.close();
 }
-
 
 // 처음 사이트에 들어오면 전체 문서를 보여줍니다.
 render();
