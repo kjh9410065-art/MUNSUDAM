@@ -112,7 +112,8 @@ function escapeHtml(value) {
   }[char]));
 }
 
-// 작성된 문서를 새 창에서 인쇄할 수 있게 만듭니다.
+// 작성된 문서를 A4 문서 형태로 만들어 인쇄합니다.
+// 입력값을 단순한 목록이 아니라 실제 출력용 서식처럼 보이도록 구성합니다.
 function printDoc(id) {
   const doc = docs.find(item => item.id === id);
   if (!doc) return;
@@ -123,38 +124,201 @@ function printDoc(id) {
     values[field[0]] = element ? element.value : "";
   });
 
-  const body = doc.fields.map(field => `
-    <div class="row"><strong>${field[1]}</strong><div>${escapeHtml(values[field[0]]).replace(/\\n/g, "<br>") || " "}</div></div>
-  `).join("");
+  // 날짜 입력값을 한국식 날짜로 보기 좋게 변환합니다.
+  function formatDate(value) {
+    if (!value) return "";
+    const parts = value.split("-");
+    return parts.length === 3 ? `${parts[0]}. ${parts[1]}. ${parts[2]}.` : value;
+  }
 
+  // 줄바꿈과 HTML 특수문자를 안전하게 처리합니다.
+  function safeValue(value) {
+    return escapeHtml(value || "").replace(/\\n/g, "<br>");
+  }
+
+  // textarea는 넓은 본문 영역으로, 일반 입력값은 표 형태로 출력합니다.
+  const rows = doc.fields.map(field => {
+    const value = field[2] === "date" ? formatDate(values[field[0]]) : values[field[0]];
+    const isLong = field[2] === "textarea";
+
+    if (isLong) {
+      return `
+        <section class="content-section">
+          <h3>${escapeHtml(field[1])}</h3>
+          <div class="content-box">${safeValue(value) || "&nbsp;"}</div>
+        </section>
+      `;
+    }
+
+    return `
+      <div class="info-row">
+        <div class="label">${escapeHtml(field[1])}</div>
+        <div class="value">${safeValue(value) || "&nbsp;"}</div>
+      </div>
+    `;
+  }).join("");
+
+  // 출력 창을 열어 브라우저의 기본 인쇄 기능을 사용합니다.
   const win = window.open("", "_blank");
   if (!win) {
     alert("팝업이 차단되었습니다. 팝업을 허용한 뒤 다시 시도해 주세요.");
     return;
   }
 
+  const today = new Date().toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).replace(/\\s/g, "");
+
   win.document.write(`<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>${doc.name}</title>
+<title>${escapeHtml(doc.name)} - 문서담</title>
 <style>
-body{font-family:Arial,"Noto Sans KR",sans-serif;max-width:760px;margin:60px auto;padding:0 30px;color:#111;line-height:1.7}
-h1{text-align:center;margin:0 0 50px}
-.row{display:grid;grid-template-columns:130px 1fr;gap:20px;border-bottom:1px solid #ddd;padding:14px 0}
-.date{text-align:right;margin-top:50px}
-@media print{body{margin:30px auto}.row{break-inside:avoid}}
+  /* A4 용지 기준으로 출력 페이지를 구성합니다. */
+  @page {
+    size: A4;
+    margin: 18mm 17mm 18mm;
+  }
+
+  /* 화면과 인쇄 모두 읽기 좋은 기본 글꼴을 사용합니다. */
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0 auto;
+    max-width: 176mm;
+    color: #111;
+    font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  /* 문서 제목을 공식 문서처럼 크게 표시합니다. */
+  h1 {
+    margin: 8mm 0 12mm;
+    text-align: center;
+    font-size: 25px;
+    letter-spacing: .12em;
+  }
+
+  /* 기본 정보 영역을 표 형태로 정리합니다. */
+  .info {
+    border-top: 2px solid #111;
+    border-bottom: 1px solid #111;
+    margin-bottom: 10mm;
+  }
+
+  .info-row {
+    display: grid;
+    grid-template-columns: 38mm 1fr;
+    min-height: 12mm;
+    border-bottom: 1px solid #d5d5d5;
+  }
+
+  .info-row:last-child {
+    border-bottom: 0;
+  }
+
+  .label {
+    display: flex;
+    align-items: center;
+    padding: 3mm 4mm;
+    font-weight: 700;
+    background: #f7f7f7;
+    border-right: 1px solid #d5d5d5;
+  }
+
+  .value {
+    display: flex;
+    align-items: center;
+    padding: 3mm 4mm;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* 경위 내용처럼 긴 문장을 문서 본문 영역으로 출력합니다. */
+  .content-section {
+    margin: 0 0 8mm;
+    break-inside: avoid;
+  }
+
+  .content-section h3 {
+    margin: 0;
+    padding: 3mm 4mm;
+    border: 1px solid #bbb;
+    border-bottom: 0;
+    font-size: 13px;
+    background: #f7f7f7;
+  }
+
+  .content-box {
+    min-height: 48mm;
+    padding: 5mm;
+    border: 1px solid #bbb;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* 문서 하단 날짜와 확인 문구를 정리합니다. */
+  .confirmation {
+    margin-top: 13mm;
+    text-align: center;
+  }
+
+  .print-date {
+    margin-top: 10mm;
+    text-align: right;
+  }
+
+  .signature {
+    margin-top: 5mm;
+    text-align: right;
+  }
+
+  /* 인쇄할 때 불필요한 여백과 배경을 제거합니다. */
+  @media print {
+    body {
+      max-width: none;
+    }
+
+    .content-section,
+    .info-row {
+      break-inside: avoid;
+    }
+  }
 </style>
 </head>
 <body>
-<h1>${doc.name}</h1>
-${body}
-<div class="date">${new Date().toLocaleDateString("ko-KR")}</div>
-<script>window.onload=function(){window.print()}<\\/script>
+  <h1>${escapeHtml(doc.name)}</h1>
+
+  <div class="info">
+    ${rows}
+  </div>
+
+  <div class="confirmation">
+    위 내용은 사실과 다름없음을 확인합니다.
+  </div>
+
+  <div class="print-date">${today}</div>
+  <div class="signature">작성자: ____________________ (서명)</div>
+
+  <script>
+    // 출력 창이 열리면 자동으로 브라우저 인쇄 화면을 실행합니다.
+    window.onload = function() {
+      window.print();
+    };
+  <\\/script>
 </body>
 </html>`);
+
+  // 작성한 HTML을 출력 창에 반영합니다.
   win.document.close();
 }
+
 
 // 처음 사이트에 들어오면 전체 문서를 보여줍니다.
 render();
