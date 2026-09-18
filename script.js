@@ -527,6 +527,39 @@ function printDoc(id) {
     border-bottom: 1px solid #222;
   }
 
+  /* 화면에서만 보이는 인쇄 버튼 영역입니다. */
+  .print-tools {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+
+  .print-tools button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 16px;
+    background: #111;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .print-tools .close {
+    background: #e9e9e9;
+    color: #222;
+  }
+
+  /* 인쇄할 때는 버튼을 문서에서 숨깁니다. */
+  @media print {
+    .print-tools {
+      display: none;
+    }
+  }
+
   /* 페이지가 넘어갈 때 하나의 영역이 잘리지 않게 합니다. */
   .info, .receipt, .section { break-inside: avoid; }
 
@@ -541,6 +574,11 @@ function printDoc(id) {
 </style>
 </head>
 <body>
+  <!-- 화면에서 바로 인쇄하거나 출력 창을 닫을 수 있는 버튼입니다. -->
+  <div class="print-tools">
+    <button type="button" onclick="window.print()">🖨 인쇄하기</button>
+    <button type="button" class="close" onclick="window.close()">닫기</button>
+  </div>
 ${template}
 <script>
   // 인쇄 전용 창이 열리면 자동으로 브라우저 인쇄 대화상자를 실행합니다.
