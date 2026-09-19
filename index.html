@@ -20,14 +20,22 @@
 <link rel="apple-touch-icon" href="/favicon.svg">
 </head>
 <body>
-<header class="header"><div class="wrap nav"><a class="brand" href="#">문서담</a><span class="tag">필요한 문서를 간편하게</span></div></header>
+<header class="header"><div class="wrap nav"><a class="brand" href="#">문서담</a><span class="tag">필요한 문서를 간편하게</span><button id="themeToggle" class="theme-toggle" type="button" aria-label="다크모드 전환">🌙 다크모드</button></div></header>
 <main class="wrap">
 <section class="hero"><p class="eyebrow">MUNSUDAM</p><h1>필요한 문서를<br><strong>내용만 입력해서 완성하세요.</strong></h1><p>사직서, 위임장, 차용증 등 자주 쓰는 문서를 간단하게 작성하고 미리 본 후 인쇄할 수 있습니다.</p></section>
 <section class="toolbar"><input id="search" type="search" placeholder="문서 이름을 검색하세요"><div id="categories" class="categories"></div></section>
 <section id="cards" class="cards"></section>
 <section id="editor" class="editor hidden"></section>
 </main>
-<footer><div class="wrap">문서담 · 입력한 내용은 서버로 전송되지 않습니다.</div></footer>
+<footer><div class="wrap footer-inner"><span>문서담 · 입력한 내용은 서버로 전송되지 않습니다.</span><div class="legal-links"><button type="button" onclick="openLegal('terms')">이용약관</button><button type="button" onclick="openLegal('privacy')">개인정보처리방침</button><button type="button" onclick="openLegal('notice')">법적 고지</button><button type="button" onclick="openLegal('contact')">문의</button></div></div></footer>
+<div id="legalModal" class="legal-modal hidden" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+  <div class="legal-backdrop" onclick="closeLegal()"></div>
+  <section class="legal-panel">
+    <button class="legal-close" type="button" onclick="closeLegal()" aria-label="닫기">×</button>
+    <h2 id="legalTitle"></h2>
+    <div id="legalContent"></div>
+  </section>
+</div>
 <script src="script.js"></script>
 </body>
 </html>
