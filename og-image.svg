@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- MUNSUDAM 링크 미리보기용 1200x630 배너입니다. -->
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1677ff"/>
+      <stop offset="1" stop-color="#0b55d8"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eaf3ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1050" cy="90" r="300" fill="#dcecff"/>
+  <circle cx="1130" cy="570" r="330" fill="#c7e0ff"/>
+  <text x="78" y="128" fill="#607da6" font-family="Arial, sans-serif" font-size="30" letter-spacing="4">필요한 문서를, 바로 여기서</text>
+  <text x="78" y="235" fill="#172a4d" font-family="Arial, sans-serif" font-size="76" font-weight="800" letter-spacing="3">MUNSUDAM</text>
+  <text x="78" y="292" fill="#172a4d" font-family="Arial, sans-serif" font-size="32">문서 작성부터 인쇄까지, 간편하게</text>
+  <g transform="translate(90 355)">
+    <circle cx="45" cy="45" r="45" fill="#e4efff"/><text x="25" y="58" fill="#1677ff" font-family="Arial" font-size="42" font-weight="800">▤</text>
+    <circle cx="205" cy="45" r="45" fill="#e4efff"/><text x="187" y="59" fill="#1677ff" font-family="Arial" font-size="38" font-weight="800">✎</text>
+    <circle cx="365" cy="45" r="45" fill="#e4efff"/><text x="345" y="59" fill="#1677ff" font-family="Arial" font-size="38" font-weight="800">▣</text>
+    <text x="10" y="112" fill="#172a4d" font-family="Arial, sans-serif" font-size="20">다양한 서식</text>
+    <text x="165" y="112" fill="#172a4d" font-family="Arial, sans-serif" font-size="20">쉬운 작성</text>
+    <text x="325" y="112" fill="#172a4d" font-family="Arial, sans-serif" font-size="20">바로 인쇄</text>
+  </g>
+  <g transform="translate(785 130)">
+    <path d="M0 45 Q0 0 45 0 H205 L285 80 V390 Q285 435 240 435 H45 Q0 435 0 390 Z" fill="#fff" stroke="#172a4d" stroke-width="12"/>
+    <path d="M205 0 V80 H285" fill="none" stroke="#1677ff" stroke-width="12"/>
+    <path d="M55 315 V205 L105 265 L155 205 V315" fill="none" stroke="url(#blue)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M65 125 H190 M65 165 H220" stroke="#a7b6ca" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <text x="790" y="585" fill="#52739f" font-family="Arial, sans-serif" font-size="24" letter-spacing="2">SIMPLE DOCUMENTS FOR A BETTER DAY</text>
+</svg>
