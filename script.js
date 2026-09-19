@@ -177,5 +177,56 @@ function previewDoc(id) {
   win.document.close();
 }
 
+// 다크모드 버튼을 직접 켜고 끄며 선택 상태를 브라우저에 저장합니다.
+const themeToggle = document.querySelector("#themeToggle");
+const savedTheme = localStorage.getItem("munsudam-theme");
+if (savedTheme === "dark") document.body.classList.add("dark");
+
+function updateThemeButton() {
+  const dark = document.body.classList.contains("dark");
+  themeToggle.textContent = dark ? "☀️ 라이트모드" : "🌙 다크모드";
+  themeToggle.setAttribute("aria-label", dark ? "라이트모드 전환" : "다크모드 전환");
+}
+
+themeToggle.addEventListener("click", () => {
+  const dark = document.body.classList.toggle("dark");
+  localStorage.setItem("munsudam-theme", dark ? "dark" : "light");
+  updateThemeButton();
+});
+
+updateThemeButton();
+
+// 법적 안내 내용을 팝업으로 보여줍니다.
+const legalData = {
+  terms: {
+    title: "이용약관",
+    html: "<h3>제1조 목적</h3><p>이 약관은 문서담(MUNSUDAM)이 제공하는 문서 작성·미리보기·인쇄 서비스의 이용에 관한 기본 사항을 정합니다.</p><h3>제2조 서비스</h3><p>문서담은 이용자가 문서 양식을 선택하고 내용을 입력하여 미리보기 및 인쇄할 수 있는 기능을 제공합니다. 제공되는 양식은 참고용이며 개별 상황에 맞게 확인하여 사용해야 합니다.</p><h3>제3조 이용자의 책임</h3><p>이용자가 입력한 내용의 정확성 및 해당 문서의 실제 사용에 따른 책임은 이용자에게 있습니다.</p><h3>제4조 서비스 변경</h3><p>서비스의 기능과 제공 양식은 운영상 필요한 경우 변경될 수 있습니다.</p>"
+  },
+  privacy: {
+    title: "개인정보처리방침",
+    html: "<h3>1. 개인정보 처리</h3><p>현재 문서담은 문서 작성 과정에서 입력한 내용을 자체 서버로 전송하거나 저장하지 않습니다. 입력 내용은 이용자의 브라우저에서 문서 작성과 미리보기·인쇄를 위해 처리됩니다.</p><h3>2. 개인정보의 보관</h3><p>문서담은 현재 별도의 회원가입이나 문서 저장 기능을 제공하지 않습니다.</p><h3>3. 이용자의 권리</h3><p>서비스의 개인정보 처리 방식이 변경되는 경우 변경된 내용을 이 페이지에 안내합니다.</p><h3>4. 문의</h3><p>개인정보 처리와 관련한 문의는 아래 문의 안내를 이용해 주세요.</p>"
+  },
+  notice: {
+    title: "법적 고지",
+    html: "<h3>서비스 성격</h3><p>문서담은 문서 작성 편의를 위한 양식 제공 서비스이며 법률·세무·노무·행정 전문가의 자문을 제공하는 서비스가 아닙니다.</p><h3>문서 사용</h3><p>제공되는 양식의 실제 사용 가능 여부와 필요한 기재사항은 문서의 용도, 제출기관 및 개별 상황에 따라 달라질 수 있습니다. 중요한 문서는 제출 전에 관련 기관 또는 전문가에게 확인하시기 바랍니다.</p><h3>콘텐츠 안내</h3><p>문서담은 특정 기관의 공식 문서 발급을 대행하거나 특정 기관의 승인을 보증하지 않습니다.</p>"
+  },
+  contact: {
+    title: "문의",
+    html: "<h3>문서담 문의</h3><p>서비스 이용 중 오류나 개선 의견이 있다면 운영자가 확인할 수 있는 문의 채널을 이용해 주세요.</p><p>현재 별도의 문의 이메일을 공개하지 않은 상태입니다. 문의 채널이 마련되면 이곳에 안내합니다.</p>"
+  }
+};
+
+function openLegal(type) {
+  const data = legalData[type];
+  if (!data) return;
+  document.querySelector("#legalTitle").textContent = data.title;
+  document.querySelector("#legalContent").innerHTML = data.html;
+  document.querySelector("#legalModal").classList.remove("hidden");
+}
+
+function closeLegal() {
+  document.querySelector("#legalModal").classList.add("hidden");
+}
+
 // 처음 사이트에 들어오면 전체 문서를 보여줍니다.
 render();
