@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- 문서 아이콘과 M을 단순한 벡터 형태로 구성한 문서담 파비콘입니다. -->
+  <rect width="256" height="256" rx="52" fill="#fff"/>
+  <path d="M63 42h91l39 39v133H63z" fill="#fff" stroke="#172a4d" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M154 42v40h39" fill="none" stroke="#1677ff" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M91 166v-51l25 30 25-30v51" fill="none" stroke="#1677ff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M89 101h52" stroke="#a7b6ca" stroke-width="9" stroke-linecap="round"/>
+</svg>
