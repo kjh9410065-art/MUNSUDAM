@@ -9,3 +9,16 @@
 .form-error{display:none;margin-top:10px;color:#c0392b;font-size:13px;font-weight:700}
 .form-error.show{display:block}
 .dark .form-error{color:#ff8f8f}
+
+/* 전체 UI의 키보드 접근성과 터치 조작을 보강합니다. */
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #5965d8;outline-offset:2px}
+.empty{grid-column:1/-1;text-align:center;padding:55px 20px;border:1px dashed #d9dde4;border-radius:16px;background:#fff;color:#737983}
+.empty strong{display:block;color:#30343a;font-size:16px;margin-bottom:7px}
+.empty p{margin:0 0 18px;font-size:13px}
+.dark .empty{background:#181b21;border-color:#353b46;color:#aeb5c0}
+.dark .empty strong{color:#eef1f6}
+@media(max-width:700px) and (hover:none) and (pointer:coarse){
+  .cat,.btn,.theme-toggle,.legal-links button{min-height:44px}
+  .categories{gap:7px}
+  .legal-panel{padding:24px 20px}
+}
