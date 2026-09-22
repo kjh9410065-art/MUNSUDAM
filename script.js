@@ -74,22 +74,16 @@ function openDoc(id) {
   const doc = docs.find(item => item.id === id);
   if (!doc) return;
 
+  const requiredKeys = ["name","writer","grantor","grantee","borrower","lender","title","company","recipient","payer"];
+
+  // 선택한 문서의 입력 화면을 먼저 생성합니다.
   editor.classList.remove("hidden");
-  // 작성 중인 내용을 브라우저 세션에 임시 저장합니다.
-  doc.fields.forEach(field => {
-    const input = document.getElementById(`field-${field[0]}`);
-    if (input) {
-      input.addEventListener("input", () => {
-        const draft = {};
-        doc.fields.forEach(item => {
-          const el = document.getElementById(`field-${item[0]}`);
-          if (el) draft[item[0]] = el.value;
-        });
-        sessionStorage.setItem(`munsudam-draft-${doc.id}`, JSON.stringify(draft));
-      });
-    }
-  });
-  // 이전 작성 내용이 있으면 복원합니다.
+  editor.innerHTML = `<button type="button" class="btn secondary editor-back" onclick="closeEditor()">← 문서 목록으로</button><h2>${doc.name}</h2><p class="desc">${doc.desc}</p><div class="formgrid">${doc.fields.map(field => {
+    const required = requiredKeys.includes(field[0]);
+    return `<div class="field ${field[2] === "textarea" ? "full" : ""}"><label for="field-${field[0]}">${field[1]}${required ? '<span class="required-mark">*</span>' : ""}</label>${field[2] === "textarea" ? `<textarea id="field-${field[0]}" placeholder="${field[1]}을 입력하세요"></textarea>` : `<input id="field-${field[0]}" type="${field[2]}" placeholder="${field[1]}을 입력하세요">`}</div>`;
+  }).join("")}</div><div id="formError" class="form-error" role="alert"></div><div class="actions"><button class="btn primary" onclick="previewDoc('${doc.id}')">미리보기</button><button class="btn secondary" onclick="closeDoc()">닫기</button></div>`;
+
+  // 이전 작성 내용을 복원합니다.
   const savedDraft = sessionStorage.getItem(`munsudam-draft-${doc.id}`);
   if (savedDraft) {
     try {
@@ -100,7 +94,21 @@ function openDoc(id) {
       });
     } catch {}
   }
-  editor.innerHTML = `<button type="button" class="btn secondary editor-back" onclick="closeEditor()">← 문서 목록으로</button><h2>${doc.name}</h2><p class="desc">${doc.desc}</p><div class="formgrid">${doc.fields.map(field => `<div class="field ${field[2] === "textarea" ? "full" : ""}"><label for="field-${field[0]}">${field[1]}</label>${field[2] === "textarea" ? `<textarea id="field-${field[0]}" placeholder="${field[1]}을 입력하세요"></textarea>` : `<input id="field-${field[0]}" type="${field[2]}" placeholder="${field[1]}을 입력하세요">`}</div>`).join("")}</div><div id="formError" class="form-error" role="alert"></div><div class="actions"><button class="btn primary" onclick="previewDoc('${doc.id}')">미리보기</button><button class="btn secondary" onclick="closeDoc()">닫기</button></div>`;
+
+  // 작성 중인 내용은 브라우저 세션에 임시 저장합니다.
+  doc.fields.forEach(field => {
+    const input = document.getElementById(`field-${field[0]}`);
+    if (!input) return;
+    input.addEventListener("input", () => {
+      const draft = {};
+      doc.fields.forEach(item => {
+        const el = document.getElementById(`field-${item[0]}`);
+        if (el) draft[item[0]] = el.value;
+      });
+      sessionStorage.setItem(`munsudam-draft-${doc.id}`, JSON.stringify(draft));
+    });
+  });
+
   editor.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
@@ -217,7 +225,7 @@ function previewDoc(id) {
   // 실제 A4 문서처럼 보이는 인쇄 전용 화면을 만듭니다.
   win.document.write(`<!doctype html><html lang="ko"><head><meta charset="UTF-8"><title>${escapeHtml(doc.name)} - 문서담</title><style>
   @page{size:A4;margin:12mm}*{box-sizing:border-box}body{margin:0 auto;max-width:186mm;min-height:273mm;padding:12mm 12mm;border:1.2px solid #222;color:#111;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",Arial,sans-serif;font-size:13px;line-height:1.7}
-  h1{margin:5mm 0 12mm;text-align:center;font-size:25px;letter-spacing:.16em}.info{border-top:2px solid #222;border-bottom:1px solid #222;margin-bottom:8mm}.info-row{display:grid;grid-template-columns:39mm 1fr;min-height:11mm;border-bottom:1px solid #d3d3d3}.info-row:last-child{border-bottom:0}.label{display:flex;align-items:center;padding:3mm 4mm;font-weight:700;background:#f6f6f6;border-right:1px solid #d3d3d3}.value{display:flex;align-items:center;padding:3mm 4mm;overflow-wrap:anywhere}.section{margin-bottom:6mm;break-inside:avoid}.section-title{padding:2.5mm 4mm;border:1px solid #999;border-bottom:0;font-weight:700;background:#f6f6f6}.section-body{padding:4mm;border:1px solid #999;overflow-wrap:anywhere}.resignation-text,.formal-text,.loan-intro{margin:13mm 4mm;text-align:center;font-size:15px;line-height:2.2}.confirmation{margin:10mm 0 8mm;text-align:center;font-size:14px}.date-line{margin-top:10mm;text-align:right}.signature-line{margin-top:5mm;text-align:right}.recipient{margin-top:12mm;text-align:center;font-size:16px;font-weight:700}.terms{margin:7mm 4mm;line-height:2.1}.two-sign{margin-top:9mm;display:grid;gap:5mm;text-align:right}.approval{border:1px solid #222;padding:3mm;margin-bottom:6mm;text-align:right;font-weight:700}.small-document{height:100%;display:flex;flex-direction:column;justify-content:space-between}.half-page-document{height:100%;display:flex;flex-direction:column;justify-content:space-between}.half-page-copy{height:124mm;padding:2mm 0;overflow:hidden}.half-page-copy h1{margin:2mm 0 5mm;font-size:20px}.half-page-copy .info{margin-bottom:4mm}.half-page-copy .info-row{min-height:7mm}.half-page-copy .section{margin-bottom:3mm}.half-page-copy .section-title{padding:1.5mm 3mm}.half-page-copy .section-body{padding:2.5mm}.half-page-copy .confirmation{margin:4mm 0 3mm;font-size:12px}.half-page-copy .date-line{margin-top:4mm}.half-page-copy .signature-line{margin-top:3mm}.half-cut-line{text-align:center;color:#777;font-size:10px;height:7mm;line-height:7mm;overflow:hidden;white-space:nowrap}.receipt-copy{height:124mm;break-inside:avoid}.receipt-copy h2{margin:0 0 5mm;text-align:center;font-size:21px;letter-spacing:.14em}.receipt{border:2px solid #222;padding:7mm;margin:0}.cut-line{text-align:center;color:#777;font-size:11px;height:8mm;line-height:8mm;overflow:hidden;white-space:nowrap}.receipt-copy .signature-line{margin-top:4mm}.receipt-row{display:flex;justify-content:space-between;gap:10mm;padding:4mm 0;border-bottom:1px solid #bbb}.receipt-amount{padding:10mm 0;text-align:center;font-size:24px;font-weight:800;border-bottom:1px solid #222}.print-tools{position:fixed;top:15px;right:15px;display:flex;gap:8px;z-index:10}.print-tools button{border:0;border-radius:8px;padding:9px 14px;background:#111;color:#fff;font-size:13px;font-weight:700;cursor:pointer}.print-tools .close{background:#e9e9e9;color:#222}.info,.receipt,.section{break-inside:avoid}@media print{body{max-width:none;min-height:273mm;border:1.2px solid #222}.print-tools{display:none}}</style></head><body><div class="print-tools"><button type="button" onclick="window.print()">🖨 인쇄하기</button><button type="button" class="close" onclick="window.close()">닫기</button></div>${template}</body></html>`);
+  h1{margin:5mm 0 12mm;text-align:center;font-size:25px;letter-spacing:.16em}.info{border-top:2px solid #222;border-bottom:1px solid #222;margin-bottom:8mm}.info-row{display:grid;grid-template-columns:39mm 1fr;min-height:11mm;border-bottom:1px solid #d3d3d3}.info-row:last-child{border-bottom:0}.label{display:flex;align-items:center;padding:3mm 4mm;font-weight:700;background:#f6f6f6;border-right:1px solid #d3d3d3}.value{display:flex;align-items:center;padding:3mm 4mm;overflow-wrap:anywhere}.section{margin-bottom:6mm;break-inside:avoid}.section-title{padding:2.5mm 4mm;border:1px solid #999;border-bottom:0;font-weight:700;background:#f6f6f6}.section-body{padding:4mm;border:1px solid #999;overflow-wrap:anywhere}.resignation-text,.formal-text,.loan-intro{margin:13mm 4mm;text-align:center;font-size:15px;line-height:2.2}.confirmation{margin:10mm 0 8mm;text-align:center;font-size:14px}.date-line{margin-top:10mm;text-align:right}.signature-line{margin-top:5mm;text-align:right}.recipient{margin-top:12mm;text-align:center;font-size:16px;font-weight:700}.terms{margin:7mm 4mm;line-height:2.1}.two-sign{margin-top:9mm;display:grid;gap:5mm;text-align:right}.approval{border:1px solid #222;padding:3mm;margin-bottom:6mm;text-align:right;font-weight:700}.small-document{height:100%;display:flex;flex-direction:column;justify-content:space-between}.half-page-document{height:100%;display:flex;flex-direction:column;justify-content:space-between}.half-page-copy{height:124mm;padding:2mm 0;overflow:hidden}.half-page-copy h1{margin:2mm 0 5mm;font-size:20px}.half-page-copy .info{margin-bottom:4mm}.half-page-copy .info-row{min-height:7mm}.half-page-copy .section{margin-bottom:3mm}.half-page-copy .section-title{padding:1.5mm 3mm}.half-page-copy .section-body{padding:2.5mm}.half-page-copy .confirmation{margin:4mm 0 3mm;font-size:12px}.half-page-copy .date-line{margin-top:4mm}.half-page-copy .signature-line{margin-top:3mm}.half-cut-line{text-align:center;color:#777;font-size:10px;height:7mm;line-height:7mm;overflow:hidden;white-space:nowrap}.receipt-copy{height:124mm;break-inside:avoid}.receipt-copy h2{margin:0 0 5mm;text-align:center;font-size:21px;letter-spacing:.14em}.receipt{border:2px solid #222;padding:7mm;margin:0}.cut-line{text-align:center;color:#777;font-size:11px;height:8mm;line-height:8mm;overflow:hidden;white-space:nowrap}.receipt-copy .signature-line{margin-top:4mm}.receipt-row{display:flex;justify-content:space-between;gap:10mm;padding:4mm 0;border-bottom:1px solid #bbb}.receipt-amount{padding:10mm 0;text-align:center;font-size:24px;font-weight:800;border-bottom:1px solid #222}.print-tools{position:fixed;top:15px;right:15px;display:flex;gap:8px;z-index:10}.print-tools button{border:0;border-radius:8px;padding:9px 14px;background:#111;color:#fff;font-size:13px;font-weight:700;cursor:pointer}.print-tools .close{background:#e9e9e9;color:#222}.info,.receipt,.section,.two-sign,.signature-line,.date-line{break-inside:avoid}.section-body{overflow-wrap:anywhere;word-break:break-word}@media print{body{max-width:none;min-height:273mm;border:1.2px solid #222}.print-tools{display:none}}</style></head><body><div class="print-tools"><button type="button" onclick="window.print()">🖨 인쇄하기</button><button type="button" class="close" onclick="window.close()">닫기</button></div>${template}</body></html>`);
   win.document.close();
 }
 
