@@ -30,12 +30,12 @@ const categories = document.querySelector("#categories");
 
 // 문서 카테고리를 자동으로 만들어 보여줍니다.
 const cats = ["전체", ...new Set(docs.map(d => d.cat))];
-categories.innerHTML = cats.map(c => `<button class="cat ${c === "전체" ? "active" : ""}" data-cat="${c}">${c}</button>`).join("");
+categories.innerHTML = cats.map(c => `<button type="button" class="cat ${c === "전체" ? "active" : ""}" data-cat="${c}" aria-pressed="${c === "전체" ? "true" : "false"}">${c}</button>`).join("");
 
 document.querySelectorAll(".cat").forEach(button => {
   button.addEventListener("click", () => {
     category = button.dataset.cat;
-    document.querySelectorAll(".cat").forEach(item => item.classList.toggle("active", item === button));
+    document.querySelectorAll(".cat").forEach(item => { item.classList.toggle("active", item === button); item.setAttribute("aria-pressed", item === button ? "true" : "false"); });
     render();
   });
 });
@@ -65,7 +65,7 @@ function render() {
 function clearSearch() {
   search.value = "";
   category = "전체";
-  document.querySelectorAll(".cat").forEach(item => item.classList.toggle("active", item.dataset.cat === "전체"));
+  document.querySelectorAll(".cat").forEach(item => { const active = item.dataset.cat === "전체"; item.classList.toggle("active", active); item.setAttribute("aria-pressed", active ? "true" : "false"); });
   render();
 }
 
@@ -116,6 +116,12 @@ function openDoc(id) {
 function closeDoc() {
   editor.classList.add("hidden");
   editor.innerHTML = "";
+}
+
+// 작성 화면을 닫고 목록 화면으로 돌아갑니다.
+function closeEditor() {
+  closeDoc();
+  window.scrollTo({top: 0, behavior: "smooth"});
 }
 
 // 입력값을 안전하게 HTML에 넣기 위해 특수문자를 변환합니다.
@@ -179,18 +185,6 @@ function buildPrintTemplate(doc, values) {
   return `<h1>${escapeHtml(doc.name)}</h1><div class="info">${doc.fields.map(field => infoRow(field[1], field[2] === "date" ? date(values[field[0]]) : val(field[0]))).join("")}</div>`;
 }
 
-// A4의 절반 크기로 출력하기 적합한 문서는 같은 양식을 위·아래로 2장 배치합니다.
-function duplicateHalfPage(template) {
-  return `<div class="half-page-document"><div class="half-page-copy">${template}</div><div class="half-cut-line">✂ · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</div><div class="half-page-copy">${template}</div></div>`;
-}
-
-// 작성 화면을 닫고 문서 목록으로 돌아갑니다.
-function closeEditor() {
-  editor.classList.add("hidden");
-  cards.classList.remove("hidden");
-  window.scrollTo({top: 0, behavior: "smooth"});
-}
-
 // 작성한 문서를 A4 미리보기 창으로 만들어 보여줍니다. 실제 인쇄는 미리보기의 인쇄 버튼을 눌렀을 때만 실행합니다.
 function previewDoc(id) {
   const doc = docs.find(item => item.id === id);
@@ -216,6 +210,7 @@ function previewDoc(id) {
   if (errorBox) errorBox.classList.remove("show");
 
   const template = buildPrintTemplate(doc, values);
+  sessionStorage.removeItem(`munsudam-draft-${doc.id}`);
   const win = window.open("", "_blank");
   if (!win) {
     alert("팝업이 차단되었습니다. 팝업을 허용한 뒤 다시 시도해 주세요.");
