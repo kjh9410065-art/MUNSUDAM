@@ -75,7 +75,32 @@ function openDoc(id) {
   if (!doc) return;
 
   editor.classList.remove("hidden");
-  editor.innerHTML = `<h2>${doc.name}</h2><p class="desc">${doc.desc}</p><div class="formgrid">${doc.fields.map(field => `<div class="field ${field[2] === "textarea" ? "full" : ""}"><label for="field-${field[0]}">${field[1]}</label>${field[2] === "textarea" ? `<textarea id="field-${field[0]}" placeholder="${field[1]}을 입력하세요"></textarea>` : `<input id="field-${field[0]}" type="${field[2]}" placeholder="${field[1]}을 입력하세요">`}</div>`).join("")}</div><div class="actions"><button class="btn primary" onclick="previewDoc('${doc.id}')">미리보기</button><button class="btn secondary" onclick="closeDoc()">닫기</button></div>`;
+  // 작성 중인 내용을 브라우저 세션에 임시 저장합니다.
+  doc.fields.forEach(field => {
+    const input = document.getElementById(`field-${field[0]}`);
+    if (input) {
+      input.addEventListener("input", () => {
+        const draft = {};
+        doc.fields.forEach(item => {
+          const el = document.getElementById(`field-${item[0]}`);
+          if (el) draft[item[0]] = el.value;
+        });
+        sessionStorage.setItem(`munsudam-draft-${doc.id}`, JSON.stringify(draft));
+      });
+    }
+  });
+  // 이전 작성 내용이 있으면 복원합니다.
+  const savedDraft = sessionStorage.getItem(`munsudam-draft-${doc.id}`);
+  if (savedDraft) {
+    try {
+      const draft = JSON.parse(savedDraft);
+      doc.fields.forEach(field => {
+        const input = document.getElementById(`field-${field[0]}`);
+        if (input && draft[field[0]] != null) input.value = draft[field[0]];
+      });
+    } catch {}
+  }
+  editor.innerHTML = `<button type="button" class="btn secondary editor-back" onclick="closeEditor()">← 문서 목록으로</button><h2>${doc.name}</h2><p class="desc">${doc.desc}</p><div class="formgrid">${doc.fields.map(field => `<div class="field ${field[2] === "textarea" ? "full" : ""}"><label for="field-${field[0]}">${field[1]}</label>${field[2] === "textarea" ? `<textarea id="field-${field[0]}" placeholder="${field[1]}을 입력하세요"></textarea>` : `<input id="field-${field[0]}" type="${field[2]}" placeholder="${field[1]}을 입력하세요">`}</div>`).join("")}</div><div id="formError" class="form-error" role="alert"></div><div class="actions"><button class="btn primary" onclick="previewDoc('${doc.id}')">미리보기</button><button class="btn secondary" onclick="closeDoc()">닫기</button></div>`;
   editor.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
@@ -151,6 +176,13 @@ function duplicateHalfPage(template) {
   return `<div class="half-page-document"><div class="half-page-copy">${template}</div><div class="half-cut-line">✂ · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</div><div class="half-page-copy">${template}</div></div>`;
 }
 
+// 작성 화면을 닫고 문서 목록으로 돌아갑니다.
+function closeEditor() {
+  editor.classList.add("hidden");
+  cards.classList.remove("hidden");
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+
 // 작성한 문서를 A4 미리보기 창으로 만들어 보여줍니다. 실제 인쇄는 미리보기의 인쇄 버튼을 눌렀을 때만 실행합니다.
 function previewDoc(id) {
   const doc = docs.find(item => item.id === id);
@@ -162,6 +194,18 @@ function previewDoc(id) {
     const element = document.getElementById(`field-${field[0]}`);
     values[field[0]] = element ? element.value : "";
   });
+
+  const requiredKeys = doc.fields.filter(field => ["name","writer","grantor","grantee","borrower","lender","title","content","company","recipient","payer"].includes(field[0])).map(field => field[0]);
+  const missing = requiredKeys.filter(key => !String(values[key] || "").trim());
+  const errorBox = document.querySelector("#formError");
+  if (missing.length) {
+    if (errorBox) {
+      errorBox.textContent = "필수 항목을 입력해 주세요.";
+      errorBox.classList.add("show");
+    }
+    return;
+  }
+  if (errorBox) errorBox.classList.remove("show");
 
   const template = buildPrintTemplate(doc, values);
   const win = window.open("", "_blank");
