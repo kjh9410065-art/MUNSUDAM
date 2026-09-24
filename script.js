@@ -313,3 +313,10 @@ legalModal.addEventListener("click", event => {
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") legalModal.classList.add("hidden");
 });
+
+
+// 실제 광고가 연결되기 전에는 광고 영역을 표시하지 않습니다.
+const adSlot = document.querySelector("#adSlot");
+if (adSlot && !adSlot.querySelector("iframe, ins, [data-ad], [data-ad-slot]")) {
+  adSlot.hidden = true;
+}
