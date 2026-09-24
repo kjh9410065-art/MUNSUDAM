@@ -1,3 +1,9 @@
+// 문서별 필수 입력값을 관리합니다.
+function getRequiredKeys(doc) {
+  const required = {"resignation":["name","date"],"power":["grantor","grantee","purpose","date"],"loan":["lender","borrower","amount","due","date"],"agreement":["writer","content","date"],"consent":["name","subject","content","date"],"report":["name","title","what","how","date"],"reason":["name","title","reason","date"],"meeting":["title","date","agenda","result"],"worklog":["name","date","today","result"],"expense":["name","date","total","purpose","details"],"travel":["name","destination","date","purpose","activities","result"],"employment":["company","name","position","purpose","date"],"career":["company","name","position","work","purpose","date"],"leave":["name","type","start","end","days","date"],"businessTripApply":["name","destination","start","end","purpose","date"],"handover":["giver","receiver","date","work","progress"],"approval":["title","name","date","purpose","details","request"],"purchase":["name","date","item","quantity","purpose"],"pledge":["name","subject","content","date"],"receipt":["recipient","payer","amount","content","date"]};
+  return required[doc.id] || [];
+}
+
 // 문서담의 문서 데이터입니다. 외부 API나 서버 없이 브라우저에서 직접 사용합니다.
 const docs = [
   {id:"resignation", name:"사직서", cat:"직장", desc:"퇴직 의사와 퇴직 예정일을 제출하는 문서", keywords:"퇴직 사직 퇴사 사직원 resignation", fields:[["name","성명","text"],["department","소속/부서","text"],["position","직위/직급","text"],["date","퇴직 예정일","date"],["reason","퇴직 사유","textarea"]]},
@@ -74,14 +80,14 @@ function openDoc(id) {
   const doc = docs.find(item => item.id === id);
   if (!doc) return;
 
-  const requiredKeys = ["name","writer","grantor","grantee","borrower","lender","title","company","recipient","payer"];
+  const requiredKeys = getRequiredKeys(doc);
 
   // 선택한 문서의 입력 화면을 먼저 생성합니다.
   editor.classList.remove("hidden");
   editor.innerHTML = `<button type="button" class="btn secondary editor-back" onclick="closeEditor()">← 문서 목록으로</button><h2>${doc.name}</h2><p class="desc">${doc.desc}</p><div class="formgrid">${doc.fields.map(field => {
     const required = requiredKeys.includes(field[0]);
     return `<div class="field ${field[2] === "textarea" ? "full" : ""}"><label for="field-${field[0]}">${field[1]}${required ? '<span class="required-mark">*</span>' : ""}</label>${field[2] === "textarea" ? `<textarea id="field-${field[0]}" placeholder="${field[1]}을 입력하세요"></textarea>` : `<input id="field-${field[0]}" type="${field[2]}" placeholder="${field[1]}을 입력하세요">`}</div>`;
-  }).join("")}</div><div id="formError" class="form-error" role="alert"></div><div class="actions"><button class="btn primary" onclick="previewDoc('${doc.id}')">미리보기</button><button class="btn secondary" onclick="closeDoc()">닫기</button></div>`;
+  }).join("")}</div><div id="formError" class="form-error" role="alert"></div><div class="actions"><button type="button" class="btn secondary" onclick="resetDraft('${doc.id}')">작성 내용 초기화</button><button type="button" class="btn primary" onclick="previewDoc('${doc.id}')">미리보기</button><button type="button" class="btn secondary" onclick="closeDoc()">닫기</button></div>`;
 
   // 이전 작성 내용을 복원합니다.
   const savedDraft = sessionStorage.getItem(`munsudam-draft-${doc.id}`);
@@ -110,6 +116,22 @@ function openDoc(id) {
   });
 
   editor.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// 현재 문서의 임시 저장 내용을 삭제하고 입력값을 초기화합니다.
+function resetDraft(id) {
+  const doc = docs.find(item => item.id === id);
+  if (!doc) return;
+  sessionStorage.removeItem(`munsudam-draft-${id}`);
+  doc.fields.forEach(field => {
+    const input = document.getElementById(`field-${field[0]}`);
+    if (input) input.value = "";
+  });
+  const error = document.getElementById("formError");
+  if (error) {
+    error.textContent = "";
+    error.classList.remove("show");
+  }
 }
 
 // 작성 화면을 닫습니다.
@@ -283,3 +305,11 @@ document.addEventListener("keydown", event => {
 
 // 처음 사이트에 들어오면 전체 문서를 보여줍니다.
 render();
+
+// 법적 안내 모달은 ESC 또는 바깥 영역 클릭으로 닫을 수 있습니다.
+legalModal.addEventListener("click", event => {
+  if (event.target === legalModal) legalModal.classList.add("hidden");
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") legalModal.classList.add("hidden");
+});
