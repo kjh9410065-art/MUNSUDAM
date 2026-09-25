@@ -219,7 +219,7 @@ function previewDoc(id) {
     values[field[0]] = element ? element.value : "";
   });
 
-  const requiredKeys = doc.fields.filter(field => ["name","writer","grantor","grantee","borrower","lender","title","content","company","recipient","payer"].includes(field[0])).map(field => field[0]);
+  const requiredKeys = getRequiredKeys(doc);
   const missing = requiredKeys.filter(key => !String(values[key] || "").trim());
   const errorBox = document.querySelector("#formError");
   if (missing.length) {
@@ -303,20 +303,19 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape") closeLegal();
 });
 
+// 법적 안내 모달의 바깥 영역을 클릭하면 정상적으로 닫습니다.
+document.querySelector("#legalModal").addEventListener("click", event => {
+  if (event.target === event.currentTarget) closeLegal();
+});
+
 // 처음 사이트에 들어오면 전체 문서를 보여줍니다.
 render();
 
-// 법적 안내 모달은 ESC 또는 바깥 영역 클릭으로 닫을 수 있습니다.
-legalModal.addEventListener("click", event => {
-  if (event.target === legalModal) legalModal.classList.add("hidden");
-});
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape") legalModal.classList.add("hidden");
-});
 
 
 // 실제 광고가 연결되기 전에는 광고 영역을 표시하지 않습니다.
 const adSlot = document.querySelector("#adSlot");
-if (adSlot && !adSlot.querySelector("iframe, ins, [data-ad], [data-ad-slot]")) {
-  adSlot.hidden = true;
+if (adSlot) {
+  const hasAd = adSlot.querySelector("iframe, ins, [data-ad], [data-ad-slot]");
+  adSlot.hidden = !hasAd;
 }
