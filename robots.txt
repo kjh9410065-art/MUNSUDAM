@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://munsudam.carpick.workers.dev/sitemap.xml
+Sitemap: https://munsudam.tcflick.com/sitemap.xml
