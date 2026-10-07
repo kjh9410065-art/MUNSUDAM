@@ -311,11 +311,3 @@ document.querySelector("#legalModal").addEventListener("click", event => {
 // 처음 사이트에 들어오면 전체 문서를 보여줍니다.
 render();
 
-
-
-// 실제 광고가 연결되기 전에는 광고 영역을 표시하지 않습니다.
-const adSlot = document.querySelector("#adSlot");
-if (adSlot) {
-  const hasAd = adSlot.querySelector("iframe, ins, [data-ad], [data-ad-slot]");
-  adSlot.hidden = !hasAd;
-}
