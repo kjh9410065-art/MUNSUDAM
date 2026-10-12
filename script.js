@@ -63,7 +63,7 @@ function render() {
   });
 
   cards.innerHTML = list.length
-    ? list.map(doc => `<article class="card" onclick="openDoc('${doc.id}')"><span class="badge">${doc.cat}</span><h2>${doc.name}</h2><p>${doc.desc}</p></article>`).join("")
+    ? list.map(doc => `<article class="card" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="openDoc('${doc.id}')"><span class="badge">${doc.cat}</span><h2>${doc.name}</h2><p>${doc.desc}</p></article>`).join("")
     : `<div class="empty"><strong>검색 결과가 없습니다.</strong><p>다른 문서명이나 관련 단어로 검색해 보세요.</p><button class="btn secondary" onclick="clearSearch()">전체 문서 보기</button></div>`;
 }
 
@@ -90,7 +90,7 @@ function openDoc(id) {
   }).join("")}</div><div id="formError" class="form-error" role="alert"></div><div class="actions"><button type="button" class="btn secondary" onclick="resetDraft('${doc.id}')">작성 내용 초기화</button><button type="button" class="btn primary" onclick="previewDoc('${doc.id}')">미리보기</button><button type="button" class="btn secondary" onclick="closeDoc()">닫기</button></div>`;
 
   // 이전 작성 내용을 복원합니다.
-  const savedDraft = sessionStorage.getItem(`munsudam-draft-${doc.id}`);
+  let savedDraft=null;try{savedDraft=sessionStorage.getItem(`munsudam-draft-${doc.id}`);}catch{}
   if (savedDraft) {
     try {
       const draft = JSON.parse(savedDraft);
@@ -111,7 +111,7 @@ function openDoc(id) {
         const el = document.getElementById(`field-${item[0]}`);
         if (el) draft[item[0]] = el.value;
       });
-      sessionStorage.setItem(`munsudam-draft-${doc.id}`, JSON.stringify(draft));
+      try{sessionStorage.setItem(`munsudam-draft-${doc.id}`, JSON.stringify(draft));}catch{}
     });
   });
 
@@ -122,7 +122,7 @@ function openDoc(id) {
 function resetDraft(id) {
   const doc = docs.find(item => item.id === id);
   if (!doc) return;
-  sessionStorage.removeItem(`munsudam-draft-${id}`);
+  try{sessionStorage.removeItem(`munsudam-draft-${id}`);}catch{}
   doc.fields.forEach(field => {
     const input = document.getElementById(`field-${field[0]}`);
     if (input) input.value = "";
@@ -248,7 +248,7 @@ function previewDoc(id) {
 
 // 다크모드 버튼을 직접 켜고 끄며 선택 상태를 브라우저에 저장합니다.
 const themeToggle = document.querySelector("#themeToggle");
-const savedTheme = localStorage.getItem("munsudam-theme");
+let savedTheme=null;try{savedTheme=localStorage.getItem("munsudam-theme");}catch{}
 if (savedTheme === "dark") document.body.classList.add("dark");
 
 function updateThemeButton() {
@@ -259,7 +259,7 @@ function updateThemeButton() {
 
 themeToggle.addEventListener("click", () => {
   const dark = document.body.classList.toggle("dark");
-  localStorage.setItem("munsudam-theme", dark ? "dark" : "light");
+  try{localStorage.setItem("munsudam-theme", dark ? "dark" : "light");}catch{}
   updateThemeButton();
 });
 

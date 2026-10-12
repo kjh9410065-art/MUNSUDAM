@@ -29,3 +29,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
   .actions .btn{flex:1 1 100%}
   .cat,.btn,.theme-toggle,.legal-links button{min-height:44px}
 }
+
+/* 키보드로 선택한 문서와 입력 필드를 명확하게 표시합니다. */
+.card:focus-visible,button:focus-visible{outline:3px solid #6366f1;outline-offset:3px}
