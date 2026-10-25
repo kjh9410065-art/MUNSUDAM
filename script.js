@@ -50,7 +50,7 @@ search.addEventListener("input", render);
 
 // 검색어를 비교하기 쉽게 정규화합니다.
 function normalize(value) {
-  return String(value || "").toLowerCase().replace(/\s+/g, "").replace(/[·・_-]/g, "");
+  return String(value || "").normalize("NFKC").toLowerCase().replace(/\s+/g, "").replace(/[·・_-]/g, "");
 }
 
 // 문서명, 설명, 검색 키워드를 기준으로 문서를 필터링합니다.
