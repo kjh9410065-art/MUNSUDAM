@@ -50,7 +50,7 @@
 <p>금액이나 날짜 계산이 필요하다면 <a href="https://noviq.tcflick.com/">노빅 무료 계산기</a>를 함께 이용할 수 있습니다. 다른 무료 서비스는 <a href="https://tcflick.com/">TCFLiCK</a>에서 확인하세요.</p>
 </section>
 </main>
-<footer><div class="wrap footer-inner"><span>문서담 · 입력한 내용은 서버로 전송되지 않습니다.</span><div class="legal-links"><button type="button" onclick="openLegal('terms')">이용약관</button><button type="button" onclick="openLegal('privacy')">개인정보처리방침</button><button type="button" onclick="openLegal('notice')">법적 고지</button><button type="button" onclick="openLegal('contact')">문의</button></div></div></footer>
+<footer><div class="wrap footer-inner"><span>문서담 · 입력한 내용은 서버로 전송되지 않습니다.</span><div class="legal-links"><a href="/terms" onclick="if (typeof openLegal === 'function') { event.preventDefault(); openLegal('terms'); }">이용약관</a><a href="/privacy" onclick="if (typeof openLegal === 'function') { event.preventDefault(); openLegal('privacy'); }">개인정보처리방침</a><button type="button" onclick="openLegal('notice')">법적 고지</button><a href="/contact" onclick="if (typeof openLegal === 'function') { event.preventDefault(); openLegal('contact'); }">문의</a></div></div></footer>
 <div id="legalModal" class="legal-modal hidden" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
   <div class="legal-backdrop" onclick="closeLegal()"></div>
   <section class="legal-panel">

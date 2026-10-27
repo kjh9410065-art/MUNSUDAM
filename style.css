@@ -32,3 +32,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
 
 /* 키보드로 선택한 문서와 입력 필드를 명확하게 표시합니다. */
 .card:focus-visible,button:focus-visible{outline:3px solid #6366f1;outline-offset:3px}
+
+/* 검색엔진도 접근할 수 있는 법적 안내 링크: 기존 버튼과 동일한 외관 유지 */
+.legal-links a{display:inline-flex;align-items:center;border:0;background:none;padding:0;color:#737983;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.dark .legal-links a{color:#aeb5c0}
+@media(max-width:700px) and (hover:none) and (pointer:coarse){.legal-links a{min-height:44px}}

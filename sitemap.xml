@@ -4,4 +4,7 @@
     <loc>https://munsudam.tcflick.com/</loc>
     <changefreq>weekly</changefreq>
   </url>
+  <url><loc>https://munsudam.tcflick.com/terms</loc></url>
+  <url><loc>https://munsudam.tcflick.com/privacy</loc></url>
+  <url><loc>https://munsudam.tcflick.com/contact</loc></url>
 </urlset>
